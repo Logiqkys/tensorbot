@@ -88,8 +88,13 @@ class PremiumView(discord.ui.View):
 
 intents = discord.Intents.default()
 
+
+async def _no_prefix(_bot: commands.Bot, _message: discord.Message) -> list[str]:
+    return []
+
+
 bot = commands.Bot(
-    command_prefix=commands.when_mentioned,
+    command_prefix=_no_prefix,
     intents=intents,
     help_command=None,
 )
