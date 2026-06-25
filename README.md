@@ -147,7 +147,7 @@ UptimeRobot pings your bot every 5 minutes so Render does not sleep it.
 | `DISCORD_TOKEN is missing` in Logs | Add `DISCORD_TOKEN` in Render **Environment**, then **Manual Deploy** |
 | `Invalid bot token` in Logs | Reset token in Developer Portal, update Render Environment, redeploy |
 | Bot goes offline after ~15 min | Set up UptimeRobot ping on `/health` (Step 6) |
-| Deploy failed | Check **Logs** tab for the build error |
+| `No module named 'audioop'` | Render used Python 3.13+. Add `runtime.txt` (included) or set `PYTHON_VERSION=3.11.9` in Environment, then redeploy |
 | "I cannot assign that role" | Move bot role above **Premium** in Server Settings → Roles |
 | User still cannot see channels | Check **Premium Workflow** category permissions |
 
@@ -158,5 +158,6 @@ UptimeRobot pings your bot every 5 minutes so Render does not sleep it.
 | `bot.py` | Bot logic, slash command, button, and health server |
 | `requirements.txt` | Python packages |
 | `render.yaml` | Render deploy config (free web service) |
+| `runtime.txt` | Pins Python 3.11 (required for discord.py on Render) |
 | `.env` | Local testing only — not used on Render |
 | `.gitignore` | Keeps secrets out of git |
