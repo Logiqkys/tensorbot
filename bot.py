@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 
+import aiohttp
 import discord
 from aiohttp import web
 from discord import app_commands
@@ -23,6 +24,15 @@ PREMIUM_PASSWORD = os.getenv("PREMIUM_PASSWORD", "").strip()
 PREMIUM_ROLE_NAME = "Premium"
 BUTTON_CUSTOM_ID = "premium_role_button"
 PORT = int(os.getenv("PORT", "10000"))
+KEEP_ALIVE_INTERVAL = 14 * 60  # Render free tier sleeps after ~15 min idle
+
+
+def get_keep_alive_url() -> str | None:
+    render_url = os.getenv("RENDER_EXTERNAL_URL", "").strip().rstrip("/")
+    if render_url:
+        return f"{render_url}/health"
+    custom_url = os.getenv("KEEP_ALIVE_URL", "").strip()
+    return custom_url or None
 
 
 async def grant_premium_role(interaction: discord.Interaction) -> None:
@@ -185,8 +195,28 @@ async def start_health_server() -> None:
     log.info("Health server listening on port %s", PORT)
 
 
+async def keep_render_awake() -> None:
+    url = get_keep_alive_url()
+    if not url:
+        log.info("Keep-alive disabled (set RENDER_EXTERNAL_URL on Render or KEEP_ALIVE_URL manually)")
+        return
+
+    log.info("Keep-alive enabled, pinging %s every 14 minutes", url)
+    await asyncio.sleep(30)
+
+    async with aiohttp.ClientSession() as session:
+        while True:
+            try:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+                    log.info("Keep-alive ping OK (%s)", resp.status)
+            except Exception as exc:
+                log.warning("Keep-alive ping failed: %s", exc)
+            await asyncio.sleep(KEEP_ALIVE_INTERVAL)
+
+
 async def run_bot() -> None:
     await start_health_server()
+    asyncio.create_task(keep_render_awake())
     async with bot:
         await bot.start(TOKEN)
 

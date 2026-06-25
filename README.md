@@ -121,18 +121,18 @@ Logs stay visible here anytime — unlike Discloud.
 2. Go to `#verify-here`
 3. Run `/setup` (admin only)
 
-### Step 6 — Keep it awake for free (important)
+### Step 6 — Keep it awake (automatic)
 
-Render free tier sleeps without incoming HTTP requests. Keep the bot online with [UptimeRobot](https://uptimerobot.com) (free):
+The bot pings its own `/health` URL every **14 minutes** using Render's `RENDER_EXTERNAL_URL`. No UptimeRobot setup needed.
 
-1. Sign up at [uptimerobot.com](https://uptimerobot.com)
-2. Click **Add New Monitor**
-3. Type: **HTTP(s)**
-4. URL: your Render URL, e.g. `https://premium-role-bot.onrender.com/health`
-5. Monitoring interval: **5 minutes**
-6. Save
+After deploy, check **Logs** for:
 
-UptimeRobot pings your bot every 5 minutes so Render does not sleep it.
+```
+Keep-alive enabled, pinging https://your-app.onrender.com/health every 14 minutes
+Keep-alive ping OK (200)
+```
+
+Optional backup: add [UptimeRobot](https://uptimerobot.com) to ping the same `/health` URL every 5 minutes.
 
 ---
 
@@ -143,7 +143,7 @@ UptimeRobot pings your bot every 5 minutes so Render does not sleep it.
 | `/setup` does not appear | Wait 1–2 minutes after deploy, or re-invite with `applications.commands` scope |
 | `DISCORD_TOKEN is missing` in Logs | Add `DISCORD_TOKEN` in Render **Environment**, then **Manual Deploy** |
 | `PrivilegedIntentsRequired` in Logs | Redeploy latest commit — members intent was removed from the bot |
-| Bot goes offline after ~15 min | Set up UptimeRobot ping on `/health` (Step 6) |
+| Bot goes offline after ~15 min | Redeploy latest commit (includes built-in keep-alive). Check Logs for `Keep-alive ping OK` |
 | `No module named 'audioop'` | Change Runtime to **Docker** in Render Settings, then **Clear build cache & deploy**. Or redeploy latest commit (includes `audioop-lts` fix). |
 | "I cannot assign that role" | Move bot role above **Premium** in Server Settings → Roles |
 | User still cannot see channels | Check **Premium Workflow** category permissions |
