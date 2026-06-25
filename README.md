@@ -82,26 +82,24 @@ Do **not** commit `.env` — your token stays off GitHub.
 
 ### Step 3 — Create the web service
 
-1. Click **New +** → **Blueprint**
-2. Connect your GitHub repo
-3. Render reads `render.yaml` automatically
-4. When asked for `DISCORD_TOKEN`, paste your bot token
-5. Click **Apply**
-
-Or create manually:
+**Option A — Docker (recommended, fixes Python version issues):**
 
 1. **New +** → **Web Service**
-2. Connect your GitHub repo
+2. Connect repo **`Logiqkys/tensorbot`**
 3. Settings:
-   - **Name:** `premium-role-bot`
-   - **Runtime:** Python 3
-   - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:** `python bot.py`
+   - **Language / Runtime:** **Docker**
    - **Instance Type:** **Free**
-4. Open **Environment** → add:
-   - Key: `DISCORD_TOKEN`
-   - Value: your bot token
-5. Click **Create Web Service**
+4. **Environment** → add `DISCORD_TOKEN` = your bot token
+5. **Create Web Service**
+
+**Option B — Python runtime:**
+
+1. Same as above but choose **Python 3** instead of Docker
+2. **Build Command:** `pip install -r requirements.txt`
+3. **Start Command:** `python bot.py`
+4. **Environment** → add `DISCORD_TOKEN` and `PYTHON_VERSION` = `3.11.9`
+
+If deploy fails with `No module named 'audioop'`, switch the service to **Docker** (Option A) or click **Manual Deploy** → **Clear build cache & deploy**.
 
 ### Step 4 — Check logs
 
@@ -147,7 +145,7 @@ UptimeRobot pings your bot every 5 minutes so Render does not sleep it.
 | `DISCORD_TOKEN is missing` in Logs | Add `DISCORD_TOKEN` in Render **Environment**, then **Manual Deploy** |
 | `Invalid bot token` in Logs | Reset token in Developer Portal, update Render Environment, redeploy |
 | Bot goes offline after ~15 min | Set up UptimeRobot ping on `/health` (Step 6) |
-| `No module named 'audioop'` | Render used Python 3.13+. Add `runtime.txt` (included) or set `PYTHON_VERSION=3.11.9` in Environment, then redeploy |
+| `No module named 'audioop'` | Change Runtime to **Docker** in Render Settings, then **Clear build cache & deploy**. Or redeploy latest commit (includes `audioop-lts` fix). |
 | "I cannot assign that role" | Move bot role above **Premium** in Server Settings → Roles |
 | User still cannot see channels | Check **Premium Workflow** category permissions |
 
@@ -158,6 +156,7 @@ UptimeRobot pings your bot every 5 minutes so Render does not sleep it.
 | `bot.py` | Bot logic, slash command, button, and health server |
 | `requirements.txt` | Python packages |
 | `render.yaml` | Render deploy config (free web service) |
-| `runtime.txt` | Pins Python 3.11 (required for discord.py on Render) |
+| `Dockerfile` | Forces Python 3.11 on Render (recommended) |
+| `runtime.txt` | Python version hint for native Python deploys |
 | `.env` | Local testing only — not used on Render |
 | `.gitignore` | Keeps secrets out of git |
