@@ -7,3 +7,5 @@ services:
     envVars:
       - key: DISCORD_TOKEN
         sync: false
+      - key: PREMIUM_PASSWORD
+        sync: false

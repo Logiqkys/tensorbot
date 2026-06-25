@@ -19,9 +19,87 @@ logging.basicConfig(
 log = logging.getLogger("premium_bot")
 
 TOKEN = os.getenv("DISCORD_TOKEN", "").strip().strip('"').strip("'")
+PREMIUM_PASSWORD = os.getenv("PREMIUM_PASSWORD", "").strip()
 PREMIUM_ROLE_NAME = "Premium"
 BUTTON_CUSTOM_ID = "premium_role_button"
 PORT = int(os.getenv("PORT", "10000"))
+
+
+async def grant_premium_role(interaction: discord.Interaction) -> None:
+    if interaction.guild is None:
+        await interaction.response.send_message(
+            "This only works inside a server.", ephemeral=True
+        )
+        return
+
+    member = interaction.user
+    if not isinstance(member, discord.Member):
+        await interaction.response.send_message(
+            "Could not find your member profile.", ephemeral=True
+        )
+        return
+
+    premium_role = discord.utils.get(interaction.guild.roles, name=PREMIUM_ROLE_NAME)
+    if premium_role is None:
+        await interaction.response.send_message(
+            f"The **{PREMIUM_ROLE_NAME}** role was not found. Ask an admin to create it.",
+            ephemeral=True,
+        )
+        return
+
+    if premium_role in member.roles:
+        await interaction.response.send_message(
+            "You already have the Premium role.", ephemeral=True
+        )
+        return
+
+    bot_member = interaction.guild.me
+    if bot_member is None or premium_role >= bot_member.top_role:
+        await interaction.response.send_message(
+            "I cannot assign that role. Move my bot role above the Premium role in Server Settings.",
+            ephemeral=True,
+        )
+        return
+
+    try:
+        await member.add_roles(premium_role, reason="Premium password verified")
+    except discord.Forbidden:
+        await interaction.response.send_message(
+            "I do not have permission to assign the Premium role.",
+            ephemeral=True,
+        )
+        return
+
+    await interaction.response.send_message(
+        "Premium role granted. You can now see the Premium Workflow channels.",
+        ephemeral=True,
+    )
+
+
+class PremiumPasswordModal(discord.ui.Modal, title="Premium Access"):
+    password = discord.ui.TextInput(
+        label="Password",
+        placeholder="Enter the premium access password",
+        required=True,
+        max_length=100,
+    )
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        if not PREMIUM_PASSWORD:
+            await interaction.response.send_message(
+                "Premium password is not configured. Ask an admin to fix the bot.",
+                ephemeral=True,
+            )
+            return
+
+        if self.password.value != PREMIUM_PASSWORD:
+            await interaction.response.send_message(
+                "Incorrect password. Please try again.",
+                ephemeral=True,
+            )
+            return
+
+        await grant_premium_role(interaction)
 
 
 class PremiumView(discord.ui.View):
@@ -42,48 +120,7 @@ class PremiumView(discord.ui.View):
             )
             return
 
-        member = interaction.user
-        if not isinstance(member, discord.Member):
-            await interaction.response.send_message(
-                "Could not find your member profile.", ephemeral=True
-            )
-            return
-
-        premium_role = discord.utils.get(interaction.guild.roles, name=PREMIUM_ROLE_NAME)
-        if premium_role is None:
-            await interaction.response.send_message(
-                f"The **{PREMIUM_ROLE_NAME}** role was not found. Ask an admin to create it.",
-                ephemeral=True,
-            )
-            return
-
-        if premium_role in member.roles:
-            await interaction.response.send_message(
-                "You already have the Premium role.", ephemeral=True
-            )
-            return
-
-        bot_member = interaction.guild.me
-        if bot_member is None or premium_role >= bot_member.top_role:
-            await interaction.response.send_message(
-                "I cannot assign that role. Move my bot role above the Premium role in Server Settings.",
-                ephemeral=True,
-            )
-            return
-
-        try:
-            await member.add_roles(premium_role, reason="Premium role button clicked")
-        except discord.Forbidden:
-            await interaction.response.send_message(
-                "I do not have permission to assign the Premium role.",
-                ephemeral=True,
-            )
-            return
-
-        await interaction.response.send_message(
-            "Premium role granted. You can now see the Premium Workflow channels.",
-            ephemeral=True,
-        )
+        await interaction.response.send_modal(PremiumPasswordModal())
 
 
 intents = discord.Intents.default()
@@ -120,7 +157,7 @@ async def setup(interaction: discord.Interaction):
     embed = discord.Embed(
         title="Get Premium Access",
         description=(
-            "Click the button below to receive your **Premium** role.\n\n"
+            "Click the button below and enter the password to receive your **Premium** role.\n\n"
             "Once you have it, you will be able to see all channels in **Premium Workflow**."
         ),
         color=discord.Color.blurple(),
