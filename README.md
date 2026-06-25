@@ -33,8 +33,7 @@ Do the same for each channel in that category if they have their own permission 
 2. Click **New Application** and give it a name
 3. Open **Bot** → **Add Bot**
 4. Copy the **Token** (you will add this to Render)
-5. Under **Privileged Gateway Intents**, enable **Server Members Intent**
-6. Save
+5. Save — no privileged intents are required for this bot
 
 ### 4. Invite the bot to your server
 
@@ -143,7 +142,7 @@ UptimeRobot pings your bot every 5 minutes so Render does not sleep it.
 |--------|-----|
 | `/setup` does not appear | Wait 1–2 minutes after deploy, or re-invite with `applications.commands` scope |
 | `DISCORD_TOKEN is missing` in Logs | Add `DISCORD_TOKEN` in Render **Environment**, then **Manual Deploy** |
-| `Invalid bot token` in Logs | Reset token in Developer Portal, update Render Environment, redeploy |
+| `PrivilegedIntentsRequired` in Logs | Redeploy latest commit — members intent was removed from the bot |
 | Bot goes offline after ~15 min | Set up UptimeRobot ping on `/health` (Step 6) |
 | `No module named 'audioop'` | Change Runtime to **Docker** in Render Settings, then **Clear build cache & deploy**. Or redeploy latest commit (includes `audioop-lts` fix). |
 | "I cannot assign that role" | Move bot role above **Premium** in Server Settings → Roles |

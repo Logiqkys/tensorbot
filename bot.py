@@ -87,9 +87,12 @@ class PremiumView(discord.ui.View):
 
 
 intents = discord.Intents.default()
-intents.members = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(
+    command_prefix=commands.when_mentioned,
+    intents=intents,
+    help_command=None,
+)
 
 
 @bot.event
@@ -161,6 +164,12 @@ if __name__ == "__main__":
         asyncio.run(run_bot())
     except discord.LoginFailure:
         log.error("Invalid bot token. Reset it in the Discord Developer Portal and update Render.")
+        raise SystemExit(1) from None
+    except discord.PrivilegedIntentsRequired:
+        log.error(
+            "Privileged intents are enabled in code but not in the Developer Portal. "
+            "This bot does not need them — redeploy the latest code."
+        )
         raise SystemExit(1) from None
     except Exception:
         log.exception("Bot crashed on startup")
